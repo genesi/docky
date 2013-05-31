@@ -1,0 +1,6 @@
+bzr snapshot specific patch
+--- /dev/null
++++ docky-2.2.1~bzr1845/.version_info
+@@ -0,0 +1 @@
++bzr docky r1845 ppa
+\ No newline at end of file

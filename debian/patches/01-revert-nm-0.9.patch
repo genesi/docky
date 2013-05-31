@@ -1,0 +1,59 @@
+=== modified file 'Docky.Services/Docky.Services/ConnectionStatusChangeEventArgs.cs'
+--- a/Docky.Services/Docky.Services/ConnectionStatusChangeEventArgs.cs	2013-01-09 15:39:49 +0000
++++ b/Docky.Services/Docky.Services/ConnectionStatusChangeEventArgs.cs	2009-10-07 10:22:01 +0000
+@@ -19,16 +19,14 @@
+ 
+ namespace Docky.Services
+ {
++	
+ 	public enum NetworkState {
+ 		Unknown = 0,
+-		Asleep = 10,
+-		Disconnected = 20,
+-		Disconnecting = 30,
+-		Connecting = 40,
+-		ConnectedLocal = 50,
+-		ConnectedSite = 60,
+-		ConnectedGlobal = 70
+-	}
++		Asleep,
++		Connecting,
++		Connected,
++		Disconnected
++	}
+ 
+ 	public class ConnectionStatusChangeEventArgs : EventArgs
+ 	{
+
+=== modified file 'Docky.Services/Docky.Services/SystemService.cs'
+--- a/Docky.Services/Docky.Services/SystemService.cs	2013-01-09 15:39:49 +0000
++++ b/Docky.Services/Docky.Services/SystemService.cs	2012-04-16 01:55:03 +0000
+@@ -118,14 +118,10 @@
+ 			if (Bus.System.NameHasOwner (NetworkManagerName)) {
+ 				try {
+ 					network = Bus.System.GetObject<INetworkManager> (NetworkManagerName, new ObjectPath (NetworkManagerPath));
+-					var state = State;
+-					NetworkConnected = (state == NetworkState.ConnectedGlobal || state == NetworkState.ConnectedLocal
+-					                    || state == NetworkState.ConnectedSite);
++					NetworkConnected = State == NetworkState.Connected;
+ 					network.StateChanged += OnConnectionStatusChanged;
+-					nmTimer = GLib.Timeout.Add (1 * 60 * 1000, () => {
+-						state = State;
+-						NetworkConnected = (state == NetworkState.ConnectedGlobal || state == NetworkState.ConnectedLocal
+-						                    || state == NetworkState.ConnectedSite);
++					nmTimer = GLib.Timeout.Add (1 * 60 * 1000, () => { 
++						NetworkConnected = State == NetworkState.Connected;
+ 						return true;
+ 					});
+ 				} catch (Exception e) {
+@@ -157,8 +153,7 @@
+ 		void OnConnectionStatusChanged (uint state)
+ 		{
+ 			NetworkState newState = (NetworkState) Enum.ToObject (typeof (NetworkState), state);
+-			NetworkConnected = (newState == NetworkState.ConnectedGlobal || newState == NetworkState.ConnectedLocal
+-			                    || newState == NetworkState.ConnectedSite);
++			NetworkConnected = newState == NetworkState.Connected;
+ 			
+ 			if (ConnectionStatusChanged != null) {
+ 				Delegate [] handlers = ConnectionStatusChanged.GetInvocationList ();
+
